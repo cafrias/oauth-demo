@@ -1,0 +1,14 @@
+{{ template "layout" . }}
+
+{{ define "title" }}Auth Server | Home{{ end }}
+
+{{ define "content" }}
+	<main>
+		<h1>Authentication Server</h1>
+		<nav>
+			<ul>
+				<li><a href="{{ index .Routes "app/register" }}">Register New Application</a></li>
+			</ul>
+		</nav>
+	</main>
+{{ end }}
