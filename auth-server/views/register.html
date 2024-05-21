@@ -10,7 +10,7 @@
 				<p>{{ index .Errors "form" }}</p>
 			{{ end }}
 		{{ end }}
-		<form action="{{ index .Routes "app/register" }}" method="post">
+		<form action="{{ index .Routes "apps/register" }}" method="post">
 			<label>
 				Name: 
 			<input type="text" name="name" required value="{{ .AppInfo.Name }}">
