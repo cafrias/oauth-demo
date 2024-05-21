@@ -1,23 +1,41 @@
 package internal
 
 import (
+	"fmt"
 	"io"
 	"text/template"
 
 	"github.com/labstack/echo/v4"
 )
 
-type Template struct {
-	templates *template.Template
+var layoutPath = "views/layout.html"
+var templates = map[string]string{
+	"index":    "views/index.html",
+	"register": "views/register.html",
 }
 
-func (t *Template) Render(w io.Writer, name string, data interface{}, e echo.Context) error {
-	return t.templates.ExecuteTemplate(w, name, data)
+type Templates struct {
+	templates map[string]*template.Template
 }
 
-func NewTemplate(path string) *Template {
-	return &Template{
-		templates: template.Must(template.ParseGlob(path)),
+func (t *Templates) Render(w io.Writer, name string, data interface{}, e echo.Context) error {
+	tmpl, ok := t.templates[name]
+	if !ok {
+		return fmt.Errorf("Template %s not found", name)
+	}
+	return tmpl.ExecuteTemplate(w, "layout", data)
+}
+
+func ParseTemplates() *Templates {
+	base := template.Must(template.ParseFiles(layoutPath))
+	t := make(map[string]*template.Template, len(templates))
+
+	for name, path := range templates {
+		t[name] = template.Must(template.Must(base.Clone()).ParseFiles(path))
+	}
+
+	return &Templates{
+		templates: t,
 	}
 }
 

@@ -1,0 +1,58 @@
+{{ template "layout" }}
+
+{{ define "title" }}Auth Server | Register{{ end }}
+
+{{ define "content" }}
+	<main>
+		<h1>Register new Oauth Application</h1>
+		{{ if .Errors }}
+			{{ if index .Errors "form" }}
+				<p>{{ index .Errors "form" }}</p>
+			{{ end }}
+		{{ end }}
+		<form action="{{ index .Routes "app/register" }}" method="post">
+			<label>
+				Name: 
+			<input type="text" name="name" required value="{{ .AppInfo.Name }}">
+			</label>
+			{{ if .Errors }}
+				{{ if index .Errors "name" }}
+					<p>{{ index .Errors "name" }}</p>
+				{{ end }}
+			{{ end }}
+			<label>
+				Application Type: 
+				<select name="type" required>
+				<option value="server-side" {{ if (eq .AppInfo.Type "server-side") }}selected{{end}}>Server Side</option>
+					<option value="client-side" {{ if (eq .AppInfo.Type "client-side") }}selected{{end}}>Client Side</option>
+					<option value="native" {{ if (eq .AppInfo.Type "native") }}selected{{end}}>Native</option>
+				</select>
+			</label>
+			{{ if .Errors }}
+				{{ if index .Errors "type" }}
+					<p>{{ index .Errors "type" }}</p>
+				{{ end }}
+			{{ end }}
+			<label>
+				Redirect URI: 
+			<input type="text" name="redirect_uri" required value="{{ .AppInfo.RedirectURI }}">
+			</label>
+			{{ if .Errors }}
+				{{ if index .Errors "redirect_uri" }}
+					<p>{{ index .Errors "redirect_uri" }}</p>
+				{{ end }}
+			{{ end }}
+			<button type="submit">Register</button>
+		</form>
+		
+		{{ if .Success }}
+			<hr/>
+			<p>Application registered successfully</p>
+			<p>Client ID: {{ .AppInfo.ClientId }}</p>
+			<p>Client Secret: {{ .AppInfo.ClientSecret }}</p>
+			<p>Redirect URI: {{ .AppInfo.RedirectURI }}</p>
+			<p>Application Type: {{ .AppInfo.Type }}</p>
+			<p>Name: {{ .AppInfo.Name }}</p>
+		{{ end }}
+	</main>
+{{ end }}
