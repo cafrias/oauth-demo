@@ -1,0 +1,36 @@
+{{ template "layout" }}
+
+{{ define "title" }}Auth Server | Login{{ end }}
+
+{{ define "content" }}
+	<main>
+		<h1>Login</h1>
+		{{ if .Errors }}
+			{{ if index .Errors "form" }}
+				<p>{{ index .Errors "form" }}</p>
+			{{ end }}
+		{{ end }}
+		<form action="{{ index .Routes "user/login" }}" method="post">
+			<label>
+				Email: 
+				<input type="text" name="email" required value="{{ .Email }}">
+			</label>
+			{{ if .Errors }}
+				{{ if index .Errors "email" }}
+					<p>{{ index .Errors "email" }}</p>
+				{{ end }}
+			{{ end }}
+			<label>
+				Password: 
+				<input type="password" name="password" required>
+			</label>
+			{{ if .Errors }}
+				{{ if index .Errors "password" }}
+					<p>{{ index .Errors "password" }}</p>
+				{{ end }}
+			{{ end }}
+			<button type="submit">Login</button>
+		</form>
+	</main>
+{{ end }}
+

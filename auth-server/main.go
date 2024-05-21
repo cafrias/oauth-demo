@@ -3,6 +3,8 @@ package main
 import (
 	"auth-server/internal"
 	"auth-server/internal/apps"
+	"auth-server/internal/common"
+	"auth-server/internal/user"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -13,32 +15,57 @@ type Handler struct {
 	Routes map[string]string
 }
 
+type HomeData struct {
+	internal.TemplateData
+	Email string
+}
+
 func (h *Handler) Index(c echo.Context) error {
-	return c.Render(http.StatusOK, "index", internal.TemplateData{Routes: h.Routes})
+	ctx := c.(common.AppContext)
+
+	s, err := ctx.GetSession()
+	if err != nil {
+		return err
+	}
+
+	data := HomeData{
+		TemplateData: internal.TemplateData{Routes: h.Routes},
+		Email:        s.GetUserInfo().Email,
+	}
+
+	return c.Render(http.StatusOK, "index", data)
 }
 
 func CreateRoutes() map[string]string {
 	return map[string]string{
 		"index":         "/",
 		"apps/register": "/apps/register",
+		"login":         "/login",
+		"logout":        "/logout",
+		"signup":        "/signup",
 	}
 }
 
 func main() {
 	templates := internal.ParseTemplates()
 	e := echo.New()
-	e.Renderer = templates
+	e.Use(common.UseAppContext)
 	e.Use(middleware.Logger())
+	e.Renderer = templates
 	routes := CreateRoutes()
 	h := &Handler{
 		Routes: routes,
 	}
 
-	appsController := apps.NewControllers(routes)
-
 	e.GET(routes["index"], h.Index)
-	e.GET(routes["apps/register"], appsController.Register)
-	e.POST(routes["apps/register"], appsController.HandleRegisterForm)
+
+	a := apps.NewControllers(routes)
+	e.GET(routes["apps/register"], a.Register)
+	e.POST(routes["apps/register"], a.HandleRegisterForm)
+
+	u := user.NewControllers(routes)
+	e.GET(routes["login"], u.Login)
+	e.POST(routes["login"], u.HandleLoginForm)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

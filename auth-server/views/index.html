@@ -8,8 +8,18 @@
 		<nav>
 			<ul>
 				<li><a href="{{ index .Routes "apps/register" }}">Register New Application</a></li>
+				{{ if not .Email }}
+					<li><a href="{{ index .Routes "login" }}">Login</a></li>
+					<li><a href="{{ index .Routes "signup" }}">Sign Up</a></li>
+				{{ end }}
 			</ul>
 		</nav>
+		{{ if .Email }}
+			<p>Welcome, {{ .Email }}</p>
+			<form action="{{ index .Routes "logout" }}" method="post">
+				<button type="submit">Logout</button>
+			</form>
+		{{ end }}
 	</main>
 {{ end }}
 

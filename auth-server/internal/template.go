@@ -12,6 +12,7 @@ var layoutPath = "views/layout.html"
 var templates = map[string]string{
 	"index":    "views/index.html",
 	"register": "views/register.html",
+	"login":    "views/login.html",
 }
 
 type Templates struct {
