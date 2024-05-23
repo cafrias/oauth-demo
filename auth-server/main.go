@@ -66,6 +66,7 @@ func main() {
 	u := user.NewControllers(routes)
 	e.GET(routes["login"], u.Login)
 	e.POST(routes["login"], u.HandleLoginForm)
+	e.POST(routes["logout"], u.Logout)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

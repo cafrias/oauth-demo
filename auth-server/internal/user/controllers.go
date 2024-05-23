@@ -67,3 +67,17 @@ func (co *Controllers) HandleLoginForm(c echo.Context) error {
 
 	return c.Redirect(http.StatusMovedPermanently, co.Routes["index"])
 }
+
+func (co *Controllers) Logout(c echo.Context) error {
+	ctx := c.(common.AppContext)
+	s, err := ctx.GetSession()
+	if err != nil {
+		return fmt.Errorf("Unable to parse session: %w", err)
+	}
+
+	if err := ctx.DeleteSession(s); err != nil {
+		return fmt.Errorf("Unable to delete session: %w", err)
+	}
+
+	return c.Redirect(http.StatusMovedPermanently, co.Routes["index"])
+}
