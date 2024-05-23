@@ -3,6 +3,7 @@ package main
 import (
 	"auth-server/internal"
 	"auth-server/internal/apps"
+	"auth-server/internal/auth"
 	"auth-server/internal/common"
 	"auth-server/internal/user"
 	"net/http"
@@ -58,8 +59,10 @@ func main() {
 	}
 
 	a := apps.NewControllers(routes)
-	e.GET(routes["apps/register"], a.Register)
-	e.POST(routes["apps/register"], a.HandleRegisterForm)
+	appRoutes := e.Group("/apps")
+	appRoutes.Use(auth.Authenticated)
+	appRoutes.GET("/register", a.Register)
+	appRoutes.POST("/register", a.HandleRegisterForm)
 
 	u := user.NewControllers(routes)
 	e.GET(routes["login"], u.Login)

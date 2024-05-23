@@ -22,6 +22,7 @@ var store = sessions.NewCookieStore([]byte("secret"))
 type Session interface {
 	GetUserInfo() UserInfo
 	SetUserInfo(user UserInfo)
+	IsAuthenticated() bool
 	Save(r *http.Request, w http.ResponseWriter) error
 	Delete(r *http.Request, w http.ResponseWriter) error
 }
@@ -60,4 +61,9 @@ func (s *defaultSession) Save(r *http.Request, w http.ResponseWriter) error {
 func (s *defaultSession) Delete(r *http.Request, w http.ResponseWriter) error {
 	s.session.Options.MaxAge = -1
 	return s.session.Save(r, w)
+}
+
+func (s *defaultSession) IsAuthenticated() bool {
+	_, ok := s.session.Values["user_id"]
+	return ok
 }
