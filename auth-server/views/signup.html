@@ -1,0 +1,46 @@
+{{ template "layout" }}
+
+{{ define "title" }}Auth Server | Sign Up{{ end }}
+
+{{ define "content" }}
+	<main>
+		<h1>Sign Up</h1>
+		{{ if .Errors }}
+			{{ if index .Errors "form" }}
+				<p>{{ index .Errors "form" }}</p>
+			{{ end }}
+		{{ end }}
+		<form action="{{ index .Routes "user/signup" }}" method="post">
+			<label>
+				Email: 
+				<input type="text" name="email" required value="{{ .Email }}">
+			</label>
+			{{ if .Errors }}
+				{{ if index .Errors "email" }}
+					<p>{{ index .Errors "email" }}</p>
+				{{ end }}
+			{{ end }}
+			<label>
+				Password: 
+				<input type="password" name="password" required>
+			</label>
+			{{ if .Errors }}
+				{{ if index .Errors "password" }}
+					<p>{{ index .Errors "password" }}</p>
+				{{ end }}
+			{{ end }}
+			<label>
+				Confirm Password:
+				<input type="password" name="password_confirmation" required>
+			</label>
+			{{ if .Errors }}
+				{{ if index .Errors "password_confirmation" }}
+					<p>{{ index .Errors "password_confirmation" }}</p>
+				{{ end }}
+			{{ end }}
+			<button type="submit">Sign Up</button>
+		</form>
+	</main>
+{{ end }}
+
+

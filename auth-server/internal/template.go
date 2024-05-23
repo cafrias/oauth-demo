@@ -13,6 +13,7 @@ var templates = map[string]string{
 	"index":    "views/index.html",
 	"register": "views/register.html",
 	"login":    "views/login.html",
+	"signup":   "views/signup.html",
 }
 
 type Templates struct {

@@ -3,6 +3,7 @@ package user
 import (
 	"auth-server/internal"
 	"auth-server/internal/common"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -11,12 +12,14 @@ import (
 
 func NewControllers(routes map[string]string) *Controllers {
 	return &Controllers{
-		Routes: routes,
+		Routes:   routes,
+		userRepo: &defaultUserRepository{},
 	}
 }
 
 type Controllers struct {
-	Routes map[string]string
+	Routes   map[string]string
+	userRepo userRepository
 }
 
 type LoginData struct {
@@ -33,6 +36,7 @@ func (co *Controllers) HandleLoginForm(c echo.Context) error {
 	ctx := c.(common.AppContext)
 	s, err := ctx.GetSession()
 	if err != nil {
+		// TODO: handle error here
 		return fmt.Errorf("Unable to parse session: %w", err)
 	}
 
@@ -49,19 +53,33 @@ func (co *Controllers) HandleLoginForm(c echo.Context) error {
 		return c.Render(http.StatusInternalServerError, "login", data)
 	}
 
-	errors := form.Validate()
-	if len(errors) > 0 {
-		data.Errors = errors
+	errs := form.Validate()
+	if len(errs) > 0 {
+		data.Errors = errs
 		data.Email = form.Email
 		return c.Render(http.StatusBadRequest, "login", data)
 	}
 
+	// TODO: we should use a purpose built login method instead
+	// to check the hashing
+	user, err := co.userRepo.FindByEmail(form.Email)
+	if err != nil {
+		if errors.Is(err, userNotFound) {
+			data.Errors = map[string]string{
+				"form": "Invalid email or password",
+			}
+
+			return c.Render(http.StatusBadRequest, "login", data)
+		}
+	}
+
 	s.SetUserInfo(common.UserInfo{
-		UserID: "123",
-		Email:  form.Email,
+		UserID: user.ID,
+		Email:  user.Email,
 	})
 
 	if err := ctx.SaveSession(s); err != nil {
+		//  TODO: handle the error here
 		return fmt.Errorf("Unable to save session: %w", err)
 	}
 
@@ -80,4 +98,56 @@ func (co *Controllers) Logout(c echo.Context) error {
 	}
 
 	return c.Redirect(http.StatusMovedPermanently, co.Routes["index"])
+}
+
+type SignupData struct {
+	internal.TemplateData
+	Errors map[string]string
+	Email  string
+}
+
+func (co *Controllers) Signup(c echo.Context) error {
+	return c.Render(http.StatusOK, "signup", SignupData{
+		TemplateData: internal.TemplateData{Routes: co.Routes},
+	})
+}
+
+func (co *Controllers) HandleSignupForm(c echo.Context) error {
+	data := SignupData{
+		TemplateData: internal.TemplateData{Routes: co.Routes},
+	}
+
+	var form signupForm
+	if err := c.Bind(&form); err != nil {
+		data.Errors = map[string]string{
+			"form": "Invalid form data",
+		}
+
+		return c.Render(http.StatusInternalServerError, "signup", data)
+	}
+
+	errs := form.Validate()
+	if len(errs) > 0 {
+		data.Errors = errs
+		data.Email = form.Email
+		return c.Render(http.StatusBadRequest, "signup", data)
+	}
+
+	err := co.userRepo.Create(form.Email, form.Password)
+	if err != nil {
+		code := http.StatusInternalServerError
+		msg := "Server Error. Try again later."
+		if errors.Is(err, userEmailTaken) {
+			code = http.StatusBadRequest
+			msg = "Email is already taken"
+		}
+
+		data.Errors = map[string]string{
+			"form": msg,
+		}
+
+		return c.Render(code, "signup", data)
+	}
+
+	return c.Redirect(http.StatusMovedPermanently, co.Routes["login"])
 }

@@ -57,8 +57,6 @@ func main() {
 		Routes: routes,
 	}
 
-	e.GET(routes["index"], h.Index)
-
 	a := apps.NewControllers(routes)
 	e.GET(routes["apps/register"], a.Register)
 	e.POST(routes["apps/register"], a.HandleRegisterForm)
@@ -67,6 +65,10 @@ func main() {
 	e.GET(routes["login"], u.Login)
 	e.POST(routes["login"], u.HandleLoginForm)
 	e.POST(routes["logout"], u.Logout)
+	e.GET(routes["signup"], u.Signup)
+	e.POST(routes["signup"], u.HandleSignupForm)
+
+	e.GET(routes["index"], h.Index)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
