@@ -2,6 +2,7 @@ package apps
 
 import (
 	"auth-server/internal"
+	"auth-server/internal/common"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -9,19 +10,21 @@ import (
 
 func NewControllers(routes map[string]string) *Controllers {
 	return &Controllers{
-		Routes: routes,
+		Routes:        routes,
+		appRepository: &defaultAppRepository{},
 	}
 }
 
 type Controllers struct {
-	Routes map[string]string
+	Routes        map[string]string
+	appRepository appRepository
 }
 
 type RegisterData struct {
 	internal.TemplateData
 	Success bool
 	Errors  map[string]string
-	AppInfo AppInfo
+	AppInfo App
 }
 
 func (co *Controllers) Register(c echo.Context) error {
@@ -47,7 +50,7 @@ func (co *Controllers) HandleRegisterForm(c echo.Context) error {
 	if len(errors) > 0 {
 		data.Success = false
 		data.Errors = errors
-		data.AppInfo = AppInfo{
+		data.AppInfo = App{
 			Name:        form.Name,
 			Type:        form.Type,
 			RedirectURI: form.RedirectURI,
@@ -56,20 +59,22 @@ func (co *Controllers) HandleRegisterForm(c echo.Context) error {
 	}
 
 	// TODO: include logic to generate client ID and client secret
-	clientId := "123456"
-	var clientSecret string
-	if form.Type == "server-side" {
-		clientSecret = "123456"
+	s, _ := c.(common.AppContext).GetSession()
+	u := s.GetUserInfo()
+
+	app, err := co.appRepository.Register(registerInput{
+		UserID:      u.UserID,
+		Name:        form.Name,
+		Type:        form.Type,
+		RedirectURI: form.RedirectURI,
+	})
+	if err != nil {
+		// TODO: handle error
+		return err
 	}
 
 	data.Success = true
-	data.AppInfo = AppInfo{
-		Name:         form.Name,
-		Type:         form.Type,
-		RedirectURI:  form.RedirectURI,
-		ClientId:     clientId,
-		ClientSecret: clientSecret,
-	}
+	data.AppInfo = *app
 
 	return c.Render(http.StatusOK, "register", data)
 }

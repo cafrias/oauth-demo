@@ -26,7 +26,13 @@ type userRepository interface {
 	Save(user user) error
 }
 
-var entries = []userDBRegistry{}
+var entries = []userDBRegistry{
+	{
+		ID:    "1",
+		Hash:  "1234",
+		Email: "a@a.com",
+	},
+}
 
 var userNotFound = errors.New("User not found")
 var userEmailTaken = errors.New("Email already taken")

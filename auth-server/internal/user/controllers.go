@@ -83,7 +83,15 @@ func (co *Controllers) HandleLoginForm(c echo.Context) error {
 		return fmt.Errorf("Unable to save session: %w", err)
 	}
 
-	return c.Redirect(http.StatusMovedPermanently, c.QueryParam("redirect"))
+	redirect := c.QueryParam("redirect")
+	var rUrl string
+	if len(redirect) > 0 {
+		rUrl = redirect
+	} else {
+		rUrl = "/"
+	}
+
+	return c.Redirect(http.StatusMovedPermanently, rUrl)
 }
 
 func (co *Controllers) Logout(c echo.Context) error {

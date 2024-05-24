@@ -32,10 +32,12 @@ func (f *registerForm) Validate() map[string]string {
 	return errors
 }
 
-type AppInfo struct {
-	Name         string
-	Type         string
-	RedirectURI  string
-	ClientId     string
+type App struct {
+	ID           string
+	ClientID     string
 	ClientSecret string
+	UserID       string
+	Name         string
+	RedirectURI  string
+	Type         string
 }
