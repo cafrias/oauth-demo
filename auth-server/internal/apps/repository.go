@@ -1,19 +1,20 @@
 package apps
 
-import "auth-server/internal/utils"
+import (
+	"auth-server/internal/common"
+	"auth-server/internal/utils"
+)
 
 type appDBRegistry struct {
+	common.SaltedHash
+	common.Timestamped
+
 	ID          string
 	ClientID    string
-	Hash        string
-	Salt        string
 	Name        string
 	RedirectURI string
 	Type        string
 	UserID      string
-	Created     string
-	Updated     string
-	Deleted     bool
 }
 
 type registerInput struct {
@@ -48,8 +49,10 @@ func (r *defaultAppRepository) Register(input registerInput) (*App, error) {
 	}
 
 	reg := appDBRegistry{
+		SaltedHash: common.SaltedHash{
+			Hash: clientSecret,
+		},
 		ClientID:    clientID,
-		Hash:        clientSecret,
 		Name:        input.Name,
 		RedirectURI: input.RedirectURI,
 		Type:        input.Type,

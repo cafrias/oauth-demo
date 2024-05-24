@@ -13,7 +13,7 @@
 		<form action="{{ index .Routes "apps/register" }}" method="post">
 			<label>
 				Name: 
-			<input type="text" name="name" required value="{{ .AppInfo.Name }}">
+				<input type="text" name="name" required value="{{ .FormData.Name }}">
 			</label>
 			{{ if .Errors }}
 				{{ if index .Errors "name" }}
@@ -23,9 +23,9 @@
 			<label>
 				Application Type: 
 				<select name="type" required>
-				<option value="server-side" {{ if (eq .AppInfo.Type "server-side") }}selected{{end}}>Server Side</option>
-					<option value="client-side" {{ if (eq .AppInfo.Type "client-side") }}selected{{end}}>Client Side</option>
-					<option value="native" {{ if (eq .AppInfo.Type "native") }}selected{{end}}>Native</option>
+				<option value="server-side" {{ if (eq .FormData.Type "server-side") }}selected{{end}}>Server Side</option>
+					<option value="client-side" {{ if (eq .FormData.Type "client-side") }}selected{{end}}>Client Side</option>
+					<option value="native" {{ if (eq .FormData.Type "native") }}selected{{end}}>Native</option>
 				</select>
 			</label>
 			{{ if .Errors }}
@@ -35,7 +35,7 @@
 			{{ end }}
 			<label>
 				Redirect URI: 
-			<input type="text" name="redirect_uri" required value="{{ .AppInfo.RedirectURI }}">
+			<input type="text" name="redirect_uri" required value="{{ .FormData.RedirectURI }}">
 			</label>
 			{{ if .Errors }}
 				{{ if index .Errors "redirect_uri" }}
@@ -45,14 +45,16 @@
 			<button type="submit">Register</button>
 		</form>
 		
-		{{ if .Success }}
+		{{ if .Result }}
 			<hr/>
 			<p>Application registered successfully</p>
-			<p>Client ID: {{ .AppInfo.ClientID }}</p>
-			<p>Client Secret: {{ .AppInfo.ClientSecret }}</p>
-			<p>Redirect URI: {{ .AppInfo.RedirectURI }}</p>
-			<p>Application Type: {{ .AppInfo.Type }}</p>
-			<p>Name: {{ .AppInfo.Name }}</p>
+			<p>Client ID: {{ .Result.ClientID }}</p>
+			{{ if .Result.ClientSecret }}
+				<p>Client Secret: {{ .Result.ClientSecret }}</p>
+			{{ end }}
+			<p>Redirect URI: {{ .Result.RedirectURI }}</p>
+			<p>Application Type: {{ .Result.Type }}</p>
+			<p>Name: {{ .Result.Name }}</p>
 		{{ end }}
 	</main>
 {{ end }}

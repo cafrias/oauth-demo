@@ -22,9 +22,9 @@ type Controllers struct {
 
 type RegisterData struct {
 	internal.TemplateData
-	Success bool
-	Errors  map[string]string
-	AppInfo App
+	Errors   map[string]string
+	FormData registerForm
+	Result   *App
 }
 
 func (co *Controllers) Register(c echo.Context) error {
@@ -48,13 +48,8 @@ func (co *Controllers) HandleRegisterForm(c echo.Context) error {
 	// TODO: add validation for the form fields
 	errors := form.Validate()
 	if len(errors) > 0 {
-		data.Success = false
 		data.Errors = errors
-		data.AppInfo = App{
-			Name:        form.Name,
-			Type:        form.Type,
-			RedirectURI: form.RedirectURI,
-		}
+		data.FormData = form
 		return c.Render(http.StatusBadRequest, "register", data)
 	}
 
@@ -73,8 +68,7 @@ func (co *Controllers) HandleRegisterForm(c echo.Context) error {
 		return err
 	}
 
-	data.Success = true
-	data.AppInfo = *app
+	data.Result = app
 
 	return c.Render(http.StatusOK, "register", data)
 }

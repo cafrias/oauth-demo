@@ -1,23 +1,17 @@
 package user
 
 import (
+	"auth-server/internal/common"
 	"errors"
 	"fmt"
 )
 
-type user struct {
+type userDBRegistry struct {
+	common.SaltedHash
+	common.Timestamped
+
 	ID    string
 	Email string
-}
-
-type userDBRegistry struct {
-	ID      string
-	Email   string
-	Hash    string
-	Salt    string
-	Created string
-	Updated string
-	Deleted bool
 }
 
 type userRepository interface {
@@ -29,8 +23,10 @@ type userRepository interface {
 var entries = []userDBRegistry{
 	{
 		ID:    "1",
-		Hash:  "1234",
 		Email: "a@a.com",
+		SaltedHash: common.SaltedHash{
+			Hash: "1234",
+		},
 	},
 }
 
@@ -68,7 +64,9 @@ func (r *defaultUserRepository) Create(email string, password string) error {
 
 	entries = append(entries, userDBRegistry{
 		Email: email,
-		Hash:  password,
+		SaltedHash: common.SaltedHash{
+			Hash: password,
+		},
 	})
 
 	return nil
