@@ -3,15 +3,18 @@ package apps
 import (
 	"auth-server/internal"
 	"auth-server/internal/common"
+	"auth-server/internal/db"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
-func NewControllers(routes map[string]string) *Controllers {
+func NewControllers(routes map[string]string, queries *db.Queries) *Controllers {
 	return &Controllers{
-		Routes:        routes,
-		appRepository: &defaultAppRepository{},
+		Routes: routes,
+		appRepository: &defaultAppRepository{
+			queries: queries,
+		},
 	}
 }
 

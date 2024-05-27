@@ -2,8 +2,14 @@ package user
 
 import (
 	"auth-server/internal/common"
+	"auth-server/internal/db"
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
+
+	"github.com/mattn/go-sqlite3"
 )
 
 type userDBRegistry struct {
@@ -15,9 +21,8 @@ type userDBRegistry struct {
 }
 
 type userRepository interface {
-	FindByEmail(email string) (*user, error)
 	Create(email string, password string) error
-	Save(user user) error
+	Login(email string, password string) (*User, error)
 }
 
 var entries = []userDBRegistry{
@@ -30,44 +35,54 @@ var entries = []userDBRegistry{
 	},
 }
 
-var userNotFound = errors.New("User not found")
 var userEmailTaken = errors.New("Email already taken")
+var loginError = errors.New("Invalid email or password")
 
-type defaultUserRepository struct{}
-
-func (r *defaultUserRepository) FindByEmail(email string) (*user, error) {
-	for _, entry := range entries {
-		if entry.Email == email {
-			return &user{
-				ID:    entry.ID,
-				Email: entry.Email,
-			}, nil
-		}
-	}
-	return nil, fmt.Errorf("Error finding user '%s': %w", email, userNotFound)
-}
-
-func (r *defaultUserRepository) Save(user user) error {
-	entries = append(entries, userDBRegistry{
-		ID:    user.ID,
-		Email: user.Email,
-	})
-	return nil
+type defaultUserRepository struct {
+	queries *db.Queries
 }
 
 func (r *defaultUserRepository) Create(email string, password string) error {
-	for _, entry := range entries {
-		if entry.Email == email {
-			return fmt.Errorf("Error creating user '%s': %w", email, userEmailTaken)
+	_, err := r.queries.CreateUser(
+		context.Background(),
+		db.CreateUserParams{
+			Email: email,
+			Hash:  password,
+		},
+	)
+	if err != nil {
+		var sqliteErr sqlite3.Error
+		if errors.As(err, &sqliteErr) {
+			if errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) {
+				return fmt.Errorf("Error creating user '%s': %w", email, userEmailTaken)
+			}
 		}
+		return fmt.Errorf("Error creating user '%s': %w", email, err)
 	}
 
-	entries = append(entries, userDBRegistry{
-		Email: email,
-		Argon2idHash: common.Argon2idHash{
+	return nil
+}
+
+func (r *defaultUserRepository) Login(email string, password string) (*User, error) {
+	dbUser, err := r.queries.Login(
+		context.Background(),
+		db.LoginParams{
+			Email: email,
+			// TODO: password must be hashed
 			Hash: password,
 		},
-	})
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, loginError
+		}
+		return nil, err
+	}
 
-	return nil
+	user := User{
+		ID:    strconv.Itoa(int(dbUser.ID)),
+		Email: dbUser.Email,
+	}
+
+	return &user, nil
 }

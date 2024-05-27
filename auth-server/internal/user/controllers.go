@@ -3,6 +3,7 @@ package user
 import (
 	"auth-server/internal"
 	"auth-server/internal/common"
+	"auth-server/internal/db"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,10 +11,12 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func NewControllers(routes map[string]string) *Controllers {
+func NewControllers(routes map[string]string, queries *db.Queries) *Controllers {
 	return &Controllers{
-		Routes:   routes,
-		userRepo: &defaultUserRepository{},
+		Routes: routes,
+		userRepo: &defaultUserRepository{
+			queries: queries,
+		},
 	}
 }
 
@@ -62,9 +65,9 @@ func (co *Controllers) HandleLoginForm(c echo.Context) error {
 
 	// TODO: we should use a purpose built login method instead
 	// to check the hashing
-	user, err := co.userRepo.FindByEmail(form.Email)
+	user, err := co.userRepo.Login(form.Email, form.Password)
 	if err != nil {
-		if errors.Is(err, userNotFound) {
+		if errors.Is(err, loginError) {
 			data.Errors = map[string]string{
 				"form": "Invalid email or password",
 			}
@@ -153,6 +156,8 @@ func (co *Controllers) HandleSignupForm(c echo.Context) error {
 		data.Errors = map[string]string{
 			"form": msg,
 		}
+
+		c.Logger().Error(err)
 
 		return c.Render(code, "signup", data)
 	}

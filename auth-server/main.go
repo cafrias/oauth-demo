@@ -5,11 +5,15 @@ import (
 	"auth-server/internal/apps"
 	"auth-server/internal/auth"
 	"auth-server/internal/common"
+	"auth-server/internal/db"
 	"auth-server/internal/user"
+	"database/sql"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Handler struct {
@@ -48,6 +52,13 @@ func CreateRoutes() map[string]string {
 }
 
 func main() {
+	conn, err := sql.Open("sqlite3", os.Getenv("AUTH_SERVER_DB_PATH"))
+	if err != nil {
+		panic(err)
+	}
+
+	queries := db.New(conn)
+
 	templates := internal.ParseTemplates()
 	e := echo.New()
 	e.Use(common.UseAppContext)
@@ -58,13 +69,13 @@ func main() {
 		Routes: routes,
 	}
 
-	a := apps.NewControllers(routes)
+	a := apps.NewControllers(routes, queries)
 	appRoutes := e.Group("/apps")
 	appRoutes.Use(auth.Authenticated)
 	appRoutes.GET("/register", a.Register)
 	appRoutes.POST("/register", a.HandleRegisterForm)
 
-	u := user.NewControllers(routes)
+	u := user.NewControllers(routes, queries)
 	e.GET(routes["login"], u.Login)
 	e.POST(routes["login"], u.HandleLoginForm)
 	e.POST(routes["logout"], u.Logout)
