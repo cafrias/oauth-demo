@@ -6,7 +6,7 @@ import (
 )
 
 type appDBRegistry struct {
-	common.SaltedHash
+	common.Argon2idHash
 	common.Timestamped
 
 	ID          string
@@ -49,7 +49,7 @@ func (r *defaultAppRepository) Register(input registerInput) (*App, error) {
 	}
 
 	reg := appDBRegistry{
-		SaltedHash: common.SaltedHash{
+		Argon2idHash: common.Argon2idHash{
 			Hash: clientSecret,
 		},
 		ClientID:    clientID,

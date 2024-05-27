@@ -1,7 +1,6 @@
 package common
 
-type SaltedHash struct {
-	Salt string
+type Argon2idHash struct {
 	Hash string
 }
 

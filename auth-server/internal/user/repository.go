@@ -7,7 +7,7 @@ import (
 )
 
 type userDBRegistry struct {
-	common.SaltedHash
+	common.Argon2idHash
 	common.Timestamped
 
 	ID    string
@@ -24,7 +24,7 @@ var entries = []userDBRegistry{
 	{
 		ID:    "1",
 		Email: "a@a.com",
-		SaltedHash: common.SaltedHash{
+		Argon2idHash: common.Argon2idHash{
 			Hash: "1234",
 		},
 	},
@@ -64,7 +64,7 @@ func (r *defaultUserRepository) Create(email string, password string) error {
 
 	entries = append(entries, userDBRegistry{
 		Email: email,
-		SaltedHash: common.SaltedHash{
+		Argon2idHash: common.Argon2idHash{
 			Hash: password,
 		},
 	})
