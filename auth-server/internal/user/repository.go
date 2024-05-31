@@ -1,8 +1,8 @@
 package user
 
 import (
-	"auth-server/internal/common"
 	"auth-server/internal/db"
+	"auth-server/internal/security"
 	"context"
 	"database/sql"
 	"errors"
@@ -12,27 +12,9 @@ import (
 	"github.com/mattn/go-sqlite3"
 )
 
-type userDBRegistry struct {
-	common.Argon2idHash
-	common.Timestamped
-
-	ID    string
-	Email string
-}
-
 type userRepository interface {
 	Create(email string, password string) error
 	Login(email string, password string) (*User, error)
-}
-
-var entries = []userDBRegistry{
-	{
-		ID:    "1",
-		Email: "a@a.com",
-		Argon2idHash: common.Argon2idHash{
-			Hash: "1234",
-		},
-	},
 }
 
 var userEmailTaken = errors.New("Email already taken")
@@ -43,11 +25,16 @@ type defaultUserRepository struct {
 }
 
 func (r *defaultUserRepository) Create(email string, password string) error {
-	_, err := r.queries.CreateUser(
+	hash, err := security.HashPassword(password)
+	if err != nil {
+		return fmt.Errorf("Error hashing password: %w", err)
+	}
+
+	_, err = r.queries.CreateUser(
 		context.Background(),
 		db.CreateUserParams{
 			Email: email,
-			Hash:  password,
+			Hash:  hash,
 		},
 	)
 	if err != nil {
@@ -64,19 +51,24 @@ func (r *defaultUserRepository) Create(email string, password string) error {
 }
 
 func (r *defaultUserRepository) Login(email string, password string) (*User, error) {
-	dbUser, err := r.queries.Login(
+	dbUser, err := r.queries.FindUserByEmail(
 		context.Background(),
-		db.LoginParams{
-			Email: email,
-			// TODO: password must be hashed
-			Hash: password,
-		},
+		email,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, loginError
 		}
 		return nil, err
+	}
+
+	ok, err := security.CheckPassword(password, dbUser.Hash)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to login %v: Error comparing password: %w", email, err)
+	}
+
+	if !ok {
+		return nil, loginError
 	}
 
 	user := User{

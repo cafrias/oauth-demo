@@ -67,6 +67,7 @@ func (co *Controllers) HandleLoginForm(c echo.Context) error {
 	// to check the hashing
 	user, err := co.userRepo.Login(form.Email, form.Password)
 	if err != nil {
+		c.Logger().Error(err)
 		if errors.Is(err, loginError) {
 			data.Errors = map[string]string{
 				"form": "Invalid email or password",
@@ -74,6 +75,10 @@ func (co *Controllers) HandleLoginForm(c echo.Context) error {
 
 			return c.Render(http.StatusBadRequest, "login", data)
 		}
+		data.Errors = map[string]string{
+			"form": "Server Error",
+		}
+		return c.Render(http.StatusBadRequest, "login", data)
 	}
 
 	s.SetUserInfo(common.UserInfo{
