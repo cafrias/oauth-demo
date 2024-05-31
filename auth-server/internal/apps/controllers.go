@@ -95,3 +95,27 @@ func (co *Controllers) UserApps(c echo.Context) error {
 	}
 	return c.Render(http.StatusOK, "user-apps", data)
 }
+
+func (co *Controllers) DeleteApp(c echo.Context) error {
+	u, _ := c.(common.AppContext).GetUser()
+
+	var form struct {
+		ClientID string `form:"client_id"`
+	}
+	if err := c.Bind(&form); err != nil {
+		c.Logger().Error(err)
+		return c.Redirect(http.StatusSeeOther, "/apps/list")
+	}
+
+	if len(form.ClientID) == 0 {
+		c.Logger().Error("client_id is required")
+		return c.Redirect(http.StatusSeeOther, "/apps/list")
+	}
+
+	err := co.appRepository.Delete(form.ClientID, u.UserID)
+	if err != nil {
+		return err
+	}
+
+	return c.Redirect(http.StatusSeeOther, "/apps/list")
+}

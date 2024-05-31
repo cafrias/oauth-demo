@@ -46,6 +46,7 @@ func CreateRoutes() map[string]string {
 		"index":         "/",
 		"apps/register": "/apps/register",
 		"apps/list":     "/apps/list",
+		"apps/delete":   "/apps/delete",
 		"login":         "/login",
 		"logout":        "/logout",
 		"signup":        "/signup",
@@ -75,6 +76,7 @@ func main() {
 	appRoutes.Use(auth.Authenticated)
 	appRoutes.GET("/register", a.Register)
 	appRoutes.POST("/register", a.HandleRegisterForm)
+	appRoutes.POST("/delete", a.DeleteApp)
 	appRoutes.GET("/list", a.UserApps)
 
 	u := user.NewControllers(routes, queries)

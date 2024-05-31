@@ -22,6 +22,7 @@ type registerInput struct {
 type appRepository interface {
 	Register(input registerInput) (*App, error)
 	GetAllByUser(userID string) ([]App, error)
+	Delete(clientID string, userID string) error
 }
 
 type defaultAppRepository struct {
@@ -116,4 +117,24 @@ func (r *defaultAppRepository) GetAllByUser(userID string) ([]App, error) {
 	}
 
 	return result, nil
+}
+
+func (r *defaultAppRepository) Delete(clientID string, userID string) error {
+	userId, err := strconv.Atoi(userID)
+	if err != nil {
+		return err
+	}
+
+	err = r.queries.DeleteApp(
+		context.Background(),
+		db.DeleteAppParams{
+			Clientid: clientID,
+			Userid:   int64(userId),
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
