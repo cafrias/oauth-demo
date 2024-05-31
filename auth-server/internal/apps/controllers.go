@@ -75,3 +75,23 @@ func (co *Controllers) HandleRegisterForm(c echo.Context) error {
 
 	return c.Render(http.StatusOK, "register", data)
 }
+
+type UserAppsData struct {
+	internal.TemplateData
+	Apps []App
+}
+
+func (co *Controllers) UserApps(c echo.Context) error {
+	u, _ := c.(common.AppContext).GetUser()
+
+	apps, err := co.appRepository.GetAllByUser(u.UserID)
+	if err != nil {
+		return err
+	}
+
+	data := UserAppsData{
+		TemplateData: internal.TemplateData{Routes: co.Routes},
+		Apps:         apps,
+	}
+	return c.Render(http.StatusOK, "user-apps", data)
+}

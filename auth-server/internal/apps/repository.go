@@ -21,6 +21,7 @@ type registerInput struct {
 
 type appRepository interface {
 	Register(input registerInput) (*App, error)
+	GetAllByUser(userID string) ([]App, error)
 }
 
 type defaultAppRepository struct {
@@ -85,4 +86,34 @@ func (r *defaultAppRepository) Register(input registerInput) (*App, error) {
 		UserID:       input.UserID,
 	}, nil
 
+}
+
+func (r *defaultAppRepository) GetAllByUser(userID string) ([]App, error) {
+	userId, err := strconv.Atoi(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	apps, err := r.queries.GetAllAppsByUser(
+		context.Background(),
+		int64(userId),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []App
+	for _, app := range apps {
+		result = append(result, App{
+			ID:           strconv.Itoa(int(app.ID)),
+			ClientID:     app.Clientid.(string),
+			ClientSecret: app.Hash,
+			Name:         app.Name,
+			RedirectURI:  app.Redirecturi,
+			Type:         app.Type,
+			UserID:       userID,
+		})
+	}
+
+	return result, nil
 }

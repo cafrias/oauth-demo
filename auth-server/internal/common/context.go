@@ -13,6 +13,8 @@ type UserInfo struct {
 
 type AppContext interface {
 	echo.Context
+	// GetUser returns the user information stored in the session
+	GetUser() (UserInfo, error)
 	GetSession() (Session, error)
 	SaveSession(Session) error
 	DeleteSession(Session) error
@@ -20,6 +22,15 @@ type AppContext interface {
 
 type defaultAppContext struct {
 	echo.Context
+}
+
+func (c *defaultAppContext) GetUser() (UserInfo, error) {
+	s, err := c.GetSession()
+	if err != nil {
+		return UserInfo{}, fmt.Errorf("Unable to get session: %w", err)
+	}
+
+	return s.GetUserInfo(), nil
 }
 
 func (c *defaultAppContext) GetSession() (Session, error) {

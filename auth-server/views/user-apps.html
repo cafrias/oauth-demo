@@ -1,0 +1,40 @@
+{{ template "layout" }}
+
+{{ define "title" }}Auth Server | Home{{ end }}
+
+{{ define "content" }}
+	<main>
+		<h1>My Apps</h1>
+		{{ if not .Apps }}
+			<p>No apps registered. <a href="{{ index .Routes "apps/register" }}">Register New Application</a></p>
+		{{ else }}
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Client ID</th>
+						<th>Redirect URI</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{ range .Apps }}
+						<tr>
+							<td>{{ .Name }}</td>
+							<td>{{ .ClientID }}</td>
+							<td>{{ .RedirectURI }}</td>
+							<td>
+								<form action="{{ index $.Routes "apps/delete" }}" method="post">
+									<input type="hidden" name="client_id" value="{{ .ClientID }}">
+									<button type="submit">Delete</button>
+								</form>
+							</td>
+						</tr>
+					{{ end }}
+				</tbody>
+			</table>
+		{{ end }}
+	</main>
+{{ end }}
+
+

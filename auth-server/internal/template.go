@@ -10,10 +10,11 @@ import (
 
 var layoutPath = "views/layout.html"
 var templates = map[string]string{
-	"index":    "views/index.html",
-	"register": "views/register.html",
-	"login":    "views/login.html",
-	"signup":   "views/signup.html",
+	"index":     "views/index.html",
+	"register":  "views/register.html",
+	"login":     "views/login.html",
+	"signup":    "views/signup.html",
+	"user-apps": "views/user-apps.html",
 }
 
 type Templates struct {
