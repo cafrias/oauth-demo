@@ -1,8 +1,8 @@
 package apps
 
 import (
-	"auth-server/internal/common"
 	"auth-server/internal/db"
+	"auth-server/internal/security"
 	"auth-server/internal/utils"
 	"context"
 	"errors"
@@ -11,18 +11,6 @@ import (
 
 	"github.com/mattn/go-sqlite3"
 )
-
-type appDBRegistry struct {
-	common.Argon2idHash
-	common.Timestamped
-
-	ID          string
-	ClientID    string
-	Name        string
-	RedirectURI string
-	Type        string
-	UserID      string
-}
 
 type registerInput struct {
 	UserID      string
@@ -34,8 +22,6 @@ type registerInput struct {
 type appRepository interface {
 	Register(input registerInput) (*App, error)
 }
-
-var appEntries = []appDBRegistry{}
 
 type defaultAppRepository struct {
 	queries *db.Queries
@@ -57,10 +43,16 @@ func (r *defaultAppRepository) Register(input registerInput) (*App, error) {
 	// TODO: check that clientID is unique
 
 	var clientSecret string
+	var hash string
 	if input.Type == "server-side" {
 		clientSecret, err = utils.RandHexDecString(40)
 		if err != nil {
 			return nil, err
+		}
+
+		hash, err = security.HashPassword(clientSecret)
+		if err != nil {
+			return nil, fmt.Errorf("Error hashing client secret: %w", err)
 		}
 	}
 
@@ -72,7 +64,7 @@ func (r *defaultAppRepository) Register(input registerInput) (*App, error) {
 			Type:        input.Type,
 			Redirecturi: input.RedirectURI,
 			Clientid:    clientID,
-			Hash:        clientSecret,
+			Hash:        hash,
 		},
 	)
 	if err != nil {
