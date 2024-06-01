@@ -96,6 +96,40 @@ func (co *Controllers) UserApps(c echo.Context) error {
 	return c.Render(http.StatusOK, "user-apps", data)
 }
 
+type resetSecretData struct {
+	internal.TemplateData
+	NewSecret string
+}
+
+func (co *Controllers) ResetAppSecret(c echo.Context) error {
+	u, _ := c.(common.AppContext).GetUser()
+
+	// TODO: cannot reset app secret for app that is not server side
+
+	var form struct {
+		ClientID string `form:"client_id"`
+	}
+	if err := c.Bind(&form); err != nil {
+		c.Logger().Error(err)
+		return c.Redirect(http.StatusSeeOther, "/apps/list")
+	}
+
+	if len(form.ClientID) == 0 {
+		c.Logger().Error("client_id is required")
+		return c.Redirect(http.StatusSeeOther, "/apps/list")
+	}
+
+	newSecret, err := co.appRepository.ResetSecret(form.ClientID, u.UserID)
+	if err != nil {
+		return err
+	}
+
+	return c.Render(http.StatusOK, "secret-reset", resetSecretData{
+		TemplateData: internal.TemplateData{Routes: co.Routes},
+		NewSecret:    newSecret,
+	})
+}
+
 func (co *Controllers) DeleteApp(c echo.Context) error {
 	u, _ := c.(common.AppContext).GetUser()
 

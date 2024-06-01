@@ -24,6 +24,10 @@
 							<td>{{ .ClientID }}</td>
 							<td>{{ .RedirectURI }}</td>
 							<td>
+								<form action="{{ index $.Routes "apps/reset" }}" method="post">
+									<input type="hidden" name="client_id" value="{{ .ClientID }}">
+									<button type="submit">Reset Secret</button>
+								</form>
 								<form action="{{ index $.Routes "apps/delete" }}" method="post">
 									<input type="hidden" name="client_id" value="{{ .ClientID }}">
 									<button type="submit">Delete</button>

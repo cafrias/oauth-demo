@@ -21,6 +21,7 @@ type registerInput struct {
 
 type appRepository interface {
 	Register(input registerInput) (*App, error)
+	ResetSecret(clientID string, userID string) (string, error)
 	GetAllByUser(userID string) ([]App, error)
 	Delete(clientID string, userID string) error
 }
@@ -137,4 +138,35 @@ func (r *defaultAppRepository) Delete(clientID string, userID string) error {
 	}
 
 	return nil
+}
+
+func (r *defaultAppRepository) ResetSecret(clientID string, userID string) (string, error) {
+	userId, err := strconv.Atoi(userID)
+	if err != nil {
+		return "", err
+	}
+
+	clientSecret, err := utils.RandHexDecString(40)
+	if err != nil {
+		return "", err
+	}
+
+	hash, err := security.HashPassword(clientSecret)
+	if err != nil {
+		return "", fmt.Errorf("Error hashing client secret: %w", err)
+	}
+
+	err = r.queries.ResetAppSecret(
+		context.Background(),
+		db.ResetAppSecretParams{
+			Clientid: clientID,
+			Userid:   int64(userId),
+			Hash:     hash,
+		},
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return clientSecret, nil
 }
