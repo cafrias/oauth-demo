@@ -36,12 +36,9 @@ func (co *Controllers) Login(c echo.Context) error {
 }
 
 func (co *Controllers) HandleLoginForm(c echo.Context) error {
-	ctx := c.(common.AppContext)
-	s, err := ctx.GetSession()
-	if err != nil {
-		// TODO: handle error here
-		return fmt.Errorf("Unable to parse session: %w", err)
-	}
+	// TODO: check there's a current session
+	// and don't attempt to login. Validate that the current
+	// session is not expired.
 
 	data := LoginData{
 		TemplateData: internal.TemplateData{Routes: co.Routes},
@@ -63,8 +60,6 @@ func (co *Controllers) HandleLoginForm(c echo.Context) error {
 		return c.Render(http.StatusBadRequest, "login", data)
 	}
 
-	// TODO: we should use a purpose built login method instead
-	// to check the hashing
 	user, err := co.userRepo.Login(form.Email, form.Password)
 	if err != nil {
 		c.Logger().Error(err)
@@ -81,13 +76,13 @@ func (co *Controllers) HandleLoginForm(c echo.Context) error {
 		return c.Render(http.StatusBadRequest, "login", data)
 	}
 
+	s, _ := common.NewDefaultSession(c.Request())
 	s.SetUserInfo(common.UserInfo{
 		UserID: user.ID,
 		Email:  user.Email,
 	})
 
-	if err := ctx.SaveSession(s); err != nil {
-		//  TODO: handle the error here
+	if err := s.Save(c.Request(), c.Response()); err != nil {
 		return fmt.Errorf("Unable to save session: %w", err)
 	}
 
@@ -103,13 +98,9 @@ func (co *Controllers) HandleLoginForm(c echo.Context) error {
 }
 
 func (co *Controllers) Logout(c echo.Context) error {
-	ctx := c.(common.AppContext)
-	s, err := ctx.GetSession()
-	if err != nil {
-		return fmt.Errorf("Unable to parse session: %w", err)
-	}
+	s, _ := c.(common.AppContext).GetSession()
 
-	if err := ctx.DeleteSession(s); err != nil {
+	if err := s.Delete(c.Request(), c.Response()); err != nil {
 		return fmt.Errorf("Unable to delete session: %w", err)
 	}
 

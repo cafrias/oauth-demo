@@ -25,13 +25,20 @@ type Controllers struct {
 
 type RegisterData struct {
 	internal.TemplateData
-	Errors   map[string]string
-	FormData registerForm
-	Result   *App
+	Errors    map[string]string
+	FormData  registerForm
+	CsrfToken string
+	Result    *App
 }
 
 func (co *Controllers) Register(c echo.Context) error {
-	return c.Render(http.StatusOK, "register", RegisterData{TemplateData: internal.TemplateData{Routes: co.Routes}})
+	s, _ := c.(common.AppContext).GetSession()
+	token := s.GetCSRFToken()
+
+	return c.Render(http.StatusOK, "register", RegisterData{
+		TemplateData: internal.TemplateData{Routes: co.Routes},
+		CsrfToken:    token,
+	})
 }
 
 func (co *Controllers) HandleRegisterForm(c echo.Context) error {
@@ -48,6 +55,15 @@ func (co *Controllers) HandleRegisterForm(c echo.Context) error {
 		return c.Render(http.StatusBadRequest, "register", data)
 	}
 
+	s, _ := c.(common.AppContext).GetSession()
+	token := s.GetCSRFToken()
+	if form.CsrfToken != token {
+		data.Errors = map[string]string{
+			"csrf": "Invalid CSRF token",
+		}
+		return c.Render(http.StatusBadRequest, "register", data)
+	}
+
 	// TODO: add validation for the form fields
 	errors := form.Validate()
 	if len(errors) > 0 {
@@ -57,7 +73,6 @@ func (co *Controllers) HandleRegisterForm(c echo.Context) error {
 	}
 
 	// TODO: include logic to generate client ID and client secret
-	s, _ := c.(common.AppContext).GetSession()
 	u := s.GetUserInfo()
 
 	app, err := co.appRepository.Register(registerInput{

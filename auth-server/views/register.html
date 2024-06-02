@@ -11,6 +11,7 @@
 			{{ end }}
 		{{ end }}
 		<form action="{{ index .Routes "apps/register" }}" method="post">
+			<input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
 			<label>
 				Name: 
 				<input type="text" name="name" required value="{{ .FormData.Name }}">

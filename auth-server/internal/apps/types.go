@@ -6,6 +6,7 @@ type registerForm struct {
 	Name        string `form:"name"`
 	Type        string `form:"type"`
 	RedirectURI string `form:"redirect_uri"`
+	CsrfToken   string `form:"csrf_token"`
 }
 
 func (f *registerForm) Validate() map[string]string {

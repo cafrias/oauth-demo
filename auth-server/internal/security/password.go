@@ -3,7 +3,6 @@ package security
 // This code is borrowed from https://gist.github.com/alexedwards/34277fae0f48abe36822b375f0f6a621
 
 import (
-	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
 	"errors"
@@ -54,16 +53,6 @@ func HashPassword(password string) (encodedHash string, err error) {
 	encodedHash = fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, memory, iterations, parallelism, b64Salt, b64Hash)
 
 	return encodedHash, nil
-}
-
-func generateRandomBytes(n uint32) ([]byte, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
 }
 
 func CheckPassword(password, encodedHash string) (ok bool, err error) {

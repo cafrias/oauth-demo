@@ -16,8 +16,6 @@ type AppContext interface {
 	// GetUser returns the user information stored in the session
 	GetUser() (UserInfo, error)
 	GetSession() (Session, error)
-	SaveSession(Session) error
-	DeleteSession(Session) error
 }
 
 type defaultAppContext struct {
@@ -40,14 +38,6 @@ func (c *defaultAppContext) GetSession() (Session, error) {
 	}
 
 	return &defaultSession{session}, nil
-}
-
-func (c *defaultAppContext) SaveSession(session Session) error {
-	return session.Save(c.Request(), c.Response())
-}
-
-func (c *defaultAppContext) DeleteSession(session Session) error {
-	return session.Delete(c.Request(), c.Response())
 }
 
 func UseAppContext(next echo.HandlerFunc) echo.HandlerFunc {
